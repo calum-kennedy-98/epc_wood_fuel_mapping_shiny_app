@@ -24,7 +24,6 @@ p_load(shiny,
 
 # Source helper functions ------------------------------------------------------
 
-source(here("Helpers/GetMappingBoundaries.R"))
 source(here("Helpers/UtilityFunctions.R"))
 
 # Define percentiles for winsorising -------------------------------------------
@@ -35,7 +34,7 @@ upper_perc = 0.95
 # Load necessary data ----------------------------------------------------------
 
 # Map boundary data (LA level)
-la_boundaries <- get_mapping_boundaries("lad22cd")
+la_boundaries <- read_sf(here("Data/la_boundaries.shp"))
 
 # LSOA data
 data_epc_lsoa_cross_section_to_map <- read_sf(here("Data/data_epc_lsoa_cross_section_to_map.shp")) %>% 
