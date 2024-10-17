@@ -39,6 +39,9 @@ ui <- page_fillable(
                 # Generate sidebar
                 sidebar = sidebar(
                   
+                  # Set initial state to open
+                  open = "open",
+                  
                   # Selectize input for LSOA
                   selectizeInput(
                     inputId = "selected_lsoa",
@@ -71,6 +74,9 @@ ui <- page_fillable(
                 # Generate sidebar
                 sidebar = sidebar(
                   
+                  # Set initial state to open
+                  open = "open",
+                  
                   # Selectize input for Electoral Ward
                   selectizeInput(
                     inputId = "selected_ward",
@@ -102,6 +108,9 @@ ui <- page_fillable(
                 
                 # Generate sidebar
                 sidebar = sidebar(
+                  
+                  # Set initial state to open
+                  open = "open",
                   
                   # Selectize input for Local Authority
                   selectizeInput(
