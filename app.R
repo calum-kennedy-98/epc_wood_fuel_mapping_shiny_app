@@ -16,6 +16,34 @@ p_load(here)
 
 source(here("Helpers/PrepareDataForShinyApp.R"))
 
+setShapeStyle <- function( map, data = getMapData(map), layerId,
+                           stroke = NULL, color = NULL,
+                           weight = NULL, opacity = NULL,
+                           fill = NULL, fillColor = NULL,
+                           fillOpacity = NULL, dashArray = NULL,
+                           smoothFactor = NULL, noClip = NULL,
+                           options = NULL
+){
+  options <- c(list(layerId = layerId),
+               options,
+               filterNULL(list(stroke = stroke, color = color,
+                               weight = weight, opacity = opacity,
+                               fill = fill, fillColor = fillColor,
+                               fillOpacity = fillOpacity, dashArray = dashArray,
+                               smoothFactor = smoothFactor, noClip = noClip
+               )))
+  # evaluate all options
+  options <- evalFormula(options, data = data)
+  # make them the same length (by building a data.frame)
+  options <- do.call(data.frame, c(options, list(stringsAsFactors=FALSE)))
+  
+  layerId <- options[[1]]
+  style <- options[-1] # drop layer column
+  
+  #print(list(style=style))
+  leaflet::invokeMethod(map, data, "setStyle", "shape", layerId, style);
+}
+
 # Define UI --------------------------------------------------------------------
 
 ui <- page_fillable(
@@ -168,10 +196,14 @@ server <- function(input, output, session) {
     paste0(input$selected_lsoa," is ranked ", 
            data_epc_lsoa_cross_section_to_map$wood_conc_pred_rank[data_epc_lsoa_cross_section_to_map$lsoa21nm == input$selected_lsoa], 
            " out of ", length(data_epc_lsoa_cross_section_to_map$fid), 
-           " LSOAs for concentration of wood fuel heat sources per km2 and ",
+           " LSOAs for concentration of wood fuel heat sources and ",
            data_epc_lsoa_cross_section_to_map$wood_perc_h_rank[data_epc_lsoa_cross_section_to_map$lsoa21nm == input$selected_lsoa], 
-           " out of ", length(data_epc_lsoa_cross_section_to_map$fid),
-           " LSOAs for percentage of houses with wood fuel heat sources")
+           " for percentage of houses with wood fuel heat sources.",
+           " The predicted concentration of wood fuel heat sources is ",
+           round(data_epc_lsoa_cross_section_to_map$wood_conc_pred[data_epc_lsoa_cross_section_to_map$lsoa21nm == input$selected_lsoa], 1),
+           " per km2, and ",
+           round(data_epc_lsoa_cross_section_to_map$wood_perc_h[data_epc_lsoa_cross_section_to_map$lsoa21nm == input$selected_lsoa], 0),
+           "% of homes have a wood fuel heat source.")
     
   })
   
@@ -186,7 +218,16 @@ server <- function(input, output, session) {
       addPolygons(data = la_boundaries,
                   fillOpacity = 0,
                   color = "grey",
-                  weight = 1) 
+                  weight = 1) %>%
+      
+      addPolygons(data = data_epc_lsoa_cross_section_to_map,
+                  smoothFactor = 0,
+                  fillColor = ~colour_pal_lsoa_conc(wood_conc_pred),
+                  weight = 0,
+                  opacity = 0.7,
+                  fillOpacity = 0.5,
+                  popup = ~paste(lsoa21nm),
+                  layerId = ~fid)
     
   })
   
@@ -302,10 +343,14 @@ server <- function(input, output, session) {
     paste0(input$selected_ward," is ranked ", 
            data_epc_ward_cross_section_to_map$wood_conc_pred_rank[data_epc_ward_cross_section_to_map$wd22nm_cd == input$selected_ward], 
            " out of ", length(data_epc_ward_cross_section_to_map$objectid), 
-           " Electoral Wards for concentration of wood fuel heat sources per km2 and ",
+           " Electoral Wards for concentration of wood fuel heat sources and ",
            data_epc_ward_cross_section_to_map$wood_perc_h_rank[data_epc_ward_cross_section_to_map$wd22nm_cd == input$selected_ward], 
-           " out of ", length(data_epc_ward_cross_section_to_map$objectid),
-           " Electoral Wards for percentage of houses with wood fuel heat sources")
+           " for percentage of houses with wood fuel heat sources.",
+           " The predicted concentration of wood fuel heat sources is ",
+           round(data_epc_ward_cross_section_to_map$wood_conc_pred[data_epc_ward_cross_section_to_map$wd22nm_cd == input$selected_ward], 1),
+           " per km2, and ",
+           round(data_epc_ward_cross_section_to_map$wood_perc_h[data_epc_ward_cross_section_to_map$wd22nm_cd == input$selected_ward], 0),
+           "% of homes have a wood fuel heat source.")
     
   })
   
@@ -447,10 +492,14 @@ server <- function(input, output, session) {
     paste0(input$selected_la," is ranked ", 
            data_epc_la_cross_section_to_map$wood_conc_pred_rank[data_epc_la_cross_section_to_map$lad22nm == input$selected_la], 
            " out of ", length(data_epc_la_cross_section_to_map$fid), 
-           " Local Authorities for concentration of wood fuel heat sources per km2 and ",
+           " Local Authorities for concentration of wood fuel heat sources and ",
            data_epc_la_cross_section_to_map$wood_perc_h_rank[data_epc_la_cross_section_to_map$lad22nm == input$selected_la], 
-           " out of ", length(data_epc_la_cross_section_to_map$fid),
-           " Local Authorities for percentage of houses with wood fuel heat sources")
+           " for percentage of houses with wood fuel heat sources.",
+           " The predicted concentration of wood fuel heat sources is ",
+           round(data_epc_la_cross_section_to_map$wood_conc_pred[data_epc_la_cross_section_to_map$lad22nm == input$selected_la], 1),
+           " per km2, and ",
+           round(data_epc_la_cross_section_to_map$wood_perc_h[data_epc_la_cross_section_to_map$lad22nm == input$selected_la], 0),
+           "% of homes have a wood fuel heat source.")
     
   })
   
