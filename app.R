@@ -10,6 +10,10 @@
 
 # Source script to prepare data for app ----------------------------------------
 
+if(!require(pacman)){install.packages("pacman")}
+
+p_load(here)
+
 source(here("Helpers/PrepareDataForShinyApp.R"))
 
 # Define UI --------------------------------------------------------------------
