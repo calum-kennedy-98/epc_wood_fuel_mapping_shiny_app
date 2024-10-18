@@ -29,7 +29,8 @@ data_epc_lsoa_cross_section_to_map <- read_sf(here("Data/cleaned/data_epc_lsoa_c
   
   # Rename outcome variables
   rename(lsoa21nm = lso21nm,
-         wood_conc_pred = wd_cnc_,
+         wood_conc_pred = wd_cnc_p,
+         wood_conc_pred_winsorised = wd_cnc_w,
          wood_perc_h = wd_prc_,
          wood_conc_pred_rank = wd_cn__,
          wood_perc_h_rank = wd_pr__)
@@ -39,7 +40,8 @@ data_epc_ward_cross_section_to_map <- read_sf(here("Data/cleaned/data_epc_ward_c
   
   # Rename outcome variables
   rename(objectid = objectd,
-         wood_conc_pred = wd_cnc_,
+         wood_conc_pred = wd_cnc_p,
+         wood_conc_pred_winsorised = wd_cnc_w,
          wood_perc_h = wd_prc_,
          wd22nm_cd = wd22nm_,
          wood_conc_pred_rank = wd_cn__,
@@ -49,7 +51,8 @@ data_epc_ward_cross_section_to_map <- read_sf(here("Data/cleaned/data_epc_ward_c
 data_epc_la_cross_section_to_map <- read_sf(here("Data/cleaned/data_epc_la_cross_section_to_map.shp")) %>% 
   
   # Rename outcome variables
-  rename(wood_conc_pred = wd_cnc_,
+  rename(wood_conc_pred = wd_cnc_p,
+         wood_conc_pred_winsorised = wd_cnc_w,
          wood_perc_h = wd_prc_,
          wood_conc_pred_rank = wd_cn__,
          wood_perc_h_rank = wd_pr__)
@@ -184,7 +187,7 @@ server <- function(input, output, session) {
   
   # Set up global colour palette and proxy to update map based on user input
   colour_pal_lsoa_conc <- colorNumeric(palette = "inferno",
-                                       domain = data_epc_lsoa_cross_section_to_map$wood_conc_pred,
+                                       domain = data_epc_lsoa_cross_section_to_map$wood_conc_pred_winsorised,
                                        reverse = TRUE)
   
   colour_pal_lsoa_perc <- colorNumeric(palette = "inferno",
@@ -232,7 +235,7 @@ server <- function(input, output, session) {
       
       addPolygons(data = data_epc_lsoa_cross_section_to_map,
                   smoothFactor = 0,
-                  fillColor = ~colour_pal_lsoa_conc(wood_conc_pred),
+                  fillColor = ~colour_pal_lsoa_conc(wood_conc_pred_winsorised),
                   weight = 0,
                   opacity = 0.7,
                   fillOpacity = 0.5,
@@ -331,7 +334,7 @@ server <- function(input, output, session) {
   
   # Set up global colour palette and proxy to update map based on user input
   colour_pal_ward_conc <- colorNumeric(palette = "inferno",
-                                       domain = data_epc_ward_cross_section_to_map$wood_conc_pred,
+                                       domain = data_epc_ward_cross_section_to_map$wood_conc_pred_winsorised,
                                        reverse = TRUE)
   
   colour_pal_ward_perc <- colorNumeric(palette = "inferno",
@@ -379,7 +382,7 @@ server <- function(input, output, session) {
       
       addPolygons(data = data_epc_ward_cross_section_to_map,
                   smoothFactor = 0,
-                  fillColor = ~colour_pal_ward_conc(wood_conc_pred),
+                  fillColor = ~colour_pal_ward_conc(wood_conc_pred_winsorised),
                   weight = 0,
                   opacity = 0.7,
                   fillOpacity = 0.5,
@@ -478,7 +481,7 @@ server <- function(input, output, session) {
   
   # Set up global colour palettes and proxy to update map based on user input
   colour_pal_la_conc <- colorNumeric(palette = "inferno",
-                                     domain = data_epc_la_cross_section_to_map$wood_conc_pred,
+                                     domain = data_epc_la_cross_section_to_map$wood_conc_pred_winsorised,
                                      reverse = TRUE)
   
   colour_pal_la_perc <- colorNumeric(palette = "inferno",
@@ -526,7 +529,7 @@ server <- function(input, output, session) {
       
       addPolygons(data = data_epc_la_cross_section_to_map,
                   smoothFactor = 0,
-                  fillColor = ~colour_pal_la_conc(wood_conc_pred),
+                  fillColor = ~colour_pal_la_conc(wood_conc_pred_winsorised),
                   weight = 0,
                   opacity = 0.7,
                   fillOpacity = 0.5,

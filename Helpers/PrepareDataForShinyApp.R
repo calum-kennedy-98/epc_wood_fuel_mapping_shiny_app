@@ -11,14 +11,9 @@
 # Install packages using pacman
 if(!require(pacman)){install.packages("pacman")}
 
-p_load(shiny,
-       stringr,
-       vroom,
-       leaflet,
+p_load(stringr,
        sf,
-       janitor,
        dplyr,
-       bslib,
        rmapshaper)
 
 # Source helper functions ------------------------------------------------------

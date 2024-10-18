@@ -42,7 +42,7 @@ prepare_data_for_shiny_app <- function(data,
            wood_perc_h_rank = dense_rank(desc({{wood_perc_h_var}}))) %>%
     
     # WInsorise wood_conc_pred variable based on function inputs to improve readability of maps
-    mutate(wood_conc_pred = case_when({{wood_conc_pred_var}} > get_percentile({{wood_conc_pred_var}}, upper_perc) ~ get_percentile({{wood_conc_pred_var}}, upper_perc),
+    mutate(wood_conc_winsorised = case_when({{wood_conc_pred_var}} > get_percentile({{wood_conc_pred_var}}, upper_perc) ~ get_percentile({{wood_conc_pred_var}}, upper_perc),
                                       {{wood_conc_pred_var}} < get_percentile({{wood_conc_pred_var}}, lower_perc) ~ get_percentile({{wood_conc_pred_var}}, lower_perc),
                                       .default = {{wood_conc_pred_var}})) %>%
     
