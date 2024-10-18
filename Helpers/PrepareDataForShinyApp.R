@@ -14,7 +14,6 @@ if(!require(pacman)){install.packages("pacman")}
 p_load(shiny,
        stringr,
        vroom,
-       ggplot2,
        leaflet,
        sf,
        janitor,

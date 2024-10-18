@@ -12,7 +12,10 @@
 
 if(!require(pacman)){install.packages("pacman")}
 
-p_load(here)
+p_load(here,
+       sf,
+       leaflet,
+       bslib)
 
 # Load necessary data ----------------------------------------------------------
 
