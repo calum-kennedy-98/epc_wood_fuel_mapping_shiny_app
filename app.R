@@ -182,6 +182,15 @@ server <- function(input, output, session) {
   
   # LSOA Level -----------------------------------------------------------------
   
+  # Set up global colour palette and proxy to update map based on user input
+  colour_pal_lsoa_conc <- colorNumeric(palette = "inferno",
+                                       domain = data_epc_lsoa_cross_section_to_map$wood_conc_pred,
+                                       reverse = TRUE)
+  
+  colour_pal_lsoa_perc <- colorNumeric(palette = "inferno",
+                                       domain = data_epc_lsoa_cross_section_to_map$wood_perc_h,
+                                       reverse = TRUE)
+  
   proxy_lsoa <- leafletProxy("lsoa_map")
   
   # Set initial value for selectize input
