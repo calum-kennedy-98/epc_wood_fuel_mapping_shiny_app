@@ -12,7 +12,8 @@
 
 if(!require(pacman)){install.packages("pacman")}
 
-p_load(here,
+p_load(shiny,
+       here,
        sf,
        dplyr,
        leaflet,
