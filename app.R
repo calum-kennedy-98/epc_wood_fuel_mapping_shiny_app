@@ -14,6 +14,7 @@ if(!require(pacman)){install.packages("pacman")}
 
 p_load(here,
        sf,
+       dplyr,
        leaflet,
        bslib)
 
