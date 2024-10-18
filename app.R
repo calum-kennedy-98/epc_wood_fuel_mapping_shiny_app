@@ -14,35 +14,40 @@ if(!require(pacman)){install.packages("pacman")}
 
 p_load(here)
 
-source(here("Helpers/PrepareDataForShinyApp.R"))
+# Load necessary data ----------------------------------------------------------
 
-setShapeStyle <- function( map, data = getMapData(map), layerId,
-                           stroke = NULL, color = NULL,
-                           weight = NULL, opacity = NULL,
-                           fill = NULL, fillColor = NULL,
-                           fillOpacity = NULL, dashArray = NULL,
-                           smoothFactor = NULL, noClip = NULL,
-                           options = NULL
-){
-  options <- c(list(layerId = layerId),
-               options,
-               filterNULL(list(stroke = stroke, color = color,
-                               weight = weight, opacity = opacity,
-                               fill = fill, fillColor = fillColor,
-                               fillOpacity = fillOpacity, dashArray = dashArray,
-                               smoothFactor = smoothFactor, noClip = noClip
-               )))
-  # evaluate all options
-  options <- evalFormula(options, data = data)
-  # make them the same length (by building a data.frame)
-  options <- do.call(data.frame, c(options, list(stringsAsFactors=FALSE)))
+# Map boundary data (LA level)
+la_boundaries <- read_sf(here("Data/raw/la_boundaries.shp"))
+
+# LSOA data
+data_epc_lsoa_cross_section_to_map <- read_sf(here("Data/cleaned/data_epc_lsoa_cross_section_to_map.shp")) %>% 
   
-  layerId <- options[[1]]
-  style <- options[-1] # drop layer column
+  # Rename outcome variables
+  rename(lsoa21nm = lso21nm,
+         wood_conc_pred = wd_cnc_,
+         wood_perc_h = wd_prc_,
+         wood_conc_pred_rank = wd_cn__,
+         wood_perc_h_rank = wd_pr__)
+
+# Ward data
+data_epc_ward_cross_section_to_map <- read_sf(here("Data/cleaned/data_epc_ward_cross_section_to_map.shp")) %>% 
   
-  #print(list(style=style))
-  leaflet::invokeMethod(map, data, "setStyle", "shape", layerId, style);
-}
+  # Rename outcome variables
+  rename(objectid = objectd,
+         wood_conc_pred = wd_cnc_,
+         wood_perc_h = wd_prc_,
+         wd22nm_cd = wd22nm_,
+         wood_conc_pred_rank = wd_cn__,
+         wood_perc_h_rank = wd_pr__)
+
+# LA data
+data_epc_la_cross_section_to_map <- read_sf(here("Data/cleaned/data_epc_la_cross_section_to_map.shp")) %>% 
+  
+  # Rename outcome variables
+  rename(wood_conc_pred = wd_cnc_,
+         wood_perc_h = wd_prc_,
+         wood_conc_pred_rank = wd_cn__,
+         wood_perc_h_rank = wd_pr__)
 
 # Define UI --------------------------------------------------------------------
 
@@ -80,7 +85,7 @@ ui <- page_fillable(
                   # Select input for data type
                   selectInput(
                     inputId = "selected_data_lsoa",
-                    label = "Select data",
+                    label = "Select data layer",
                     choices = c("Concentration",
                                 "Prevalence")
                   ),
@@ -115,7 +120,7 @@ ui <- page_fillable(
                   # Select input for data type
                   selectInput(
                     inputId = "selected_data_ward",
-                    label = "Select data",
+                    label = "Select data layer",
                     choices = c("Concentration",
                                 "Prevalence")
                   ),
@@ -150,7 +155,7 @@ ui <- page_fillable(
                   # Select input for data type
                   selectInput(
                     inputId = "selected_data_la",
-                    label = "Select data",
+                    label = "Select data layer",
                     choices = c("Concentration",
                                 "Prevalence")
                   ),
@@ -171,15 +176,6 @@ ui <- page_fillable(
 server <- function(input, output, session) {
   
   # LSOA Level -----------------------------------------------------------------
-  
-  # Set up global colour palette and proxy to update map based on user input
-  colour_pal_lsoa_conc <- colorNumeric(palette = "inferno",
-                                       domain = data_epc_lsoa_cross_section_to_map$wood_conc_pred,
-                                       reverse = TRUE)
-  
-  colour_pal_lsoa_perc <- colorNumeric(palette = "inferno",
-                                       domain = data_epc_lsoa_cross_section_to_map$wood_perc_h,
-                                       reverse = TRUE)
   
   proxy_lsoa <- leafletProxy("lsoa_map")
   
@@ -226,45 +222,45 @@ server <- function(input, output, session) {
                   weight = 0,
                   opacity = 0.7,
                   fillOpacity = 0.5,
+                  popup = ~paste(lsoa21nm), 
+                  layerId = ~fid,
+                  group = "conc") %>%
+      
+      # Add polygons and colour by concentration of EPCs with wood burning heat sources
+      addPolygons(data = data_epc_lsoa_cross_section_to_map,
+                  smoothFactor = 0,
+                  fillColor = ~colour_pal_lsoa_perc(wood_perc_h),
+                  weight = 0,
+                  opacity = 0.7,
+                  fillOpacity = 0.5,
                   popup = ~paste(lsoa21nm),
-                  layerId = ~fid)
+                  layerId = ~fid,
+                  group = "perc") %>%
+      
+      hideGroup(c("perc"))
     
   })
   
-  # Set up event to change map display based on user data selection
+  # Set up event to change map fill based on user data selection
   observeEvent(input$selected_data_lsoa, {
     
     if(input$selected_data_lsoa == "Concentration"){
       
       proxy_lsoa %>%
         
-        clearShapes() %>%
+        # Clear previous polygons
+        hideGroup(c("conc", "perc")) %>%
         
-        # Add lsoa polygons and colour by concentration of EPCs with wood burning heat sources
-        addPolygons(data = data_epc_lsoa_cross_section_to_map,
-                    smoothFactor = 0,
-                    fillColor = ~colour_pal_lsoa_conc(wood_conc_pred),
-                    weight = 0,
-                    opacity = 0.7,
-                    fillOpacity = 0.5,
-                    popup = ~paste(lsoa21nm),
-                    layerId = ~fid)
+        showGroup("conc")
       
     } else {
       
       proxy_lsoa %>%
         
-        clearShapes() %>%
+        # Clear previous polygons
+        hideGroup(c("conc", "perc")) %>%
         
-        # Add lsoa polygons and colour by concentration of EPCs with wood burning heat sources
-        addPolygons(data = data_epc_lsoa_cross_section_to_map,
-                    smoothFactor = 0,
-                    fillColor = ~colour_pal_lsoa_perc(wood_perc_h),
-                    weight = 0,
-                    opacity = 0.7,
-                    fillOpacity = 0.5,
-                    popup = ~paste(lsoa21nm),
-                    layerId = ~fid)
+        showGroup("perc")
       
     }
     
@@ -374,7 +370,21 @@ server <- function(input, output, session) {
                   opacity = 0.7,
                   fillOpacity = 0.5,
                   popup = ~paste(wd22nm_cd), 
-                  layerId = ~objectid)
+                  layerId = ~objectid,
+                  group = "conc") %>%
+    
+    # Add polygons and colour by concentration of EPCs with wood burning heat sources
+    addPolygons(data = data_epc_ward_cross_section_to_map,
+                smoothFactor = 0,
+                fillColor = ~colour_pal_ward_perc(wood_perc_h),
+                weight = 0,
+                opacity = 0.7,
+                fillOpacity = 0.5,
+                popup = ~paste(wd22nm_cd),
+                layerId = ~objectid,
+                group = "perc") %>%
+      
+      hideGroup(c("perc"))
     
   })
   
@@ -386,34 +396,18 @@ server <- function(input, output, session) {
       proxy_ward %>%
         
         # Clear previous polygons
-        clearShapes() %>%
+        hideGroup(c("conc", "perc")) %>%
         
-        # Add polygons and colour by concentration of EPCs with wood burning heat sources
-        addPolygons(data = data_epc_ward_cross_section_to_map,
-                    smoothFactor = 0,
-                    fillColor = ~colour_pal_ward_conc(wood_conc_pred),
-                    weight = 0,
-                    opacity = 0.7,
-                    fillOpacity = 0.5,
-                    popup = ~paste(wd22nm_cd), 
-                    layerId = ~objectid)
+        showGroup("conc")
       
     } else {
       
       proxy_ward %>%
         
         # Clear previous polygons
-        clearShapes() %>%
+        hideGroup(c("conc", "perc")) %>%
         
-        # Add polygons and colour by concentration of EPCs with wood burning heat sources
-        addPolygons(data = data_epc_ward_cross_section_to_map,
-                    smoothFactor = 0,
-                    fillColor = ~colour_pal_ward_perc(wood_perc_h),
-                    weight = 0,
-                    opacity = 0.7,
-                    fillOpacity = 0.5,
-                    popup = ~paste(wd22nm_cd),
-                    layerId = ~objectid)
+        showGroup("perc")
       
     }
     
@@ -516,7 +510,6 @@ server <- function(input, output, session) {
                   color = "grey",
                   weight = 1) %>%
       
-      # Add polygons and colour by concentration of EPCs with wood burning heat sources
       addPolygons(data = data_epc_la_cross_section_to_map,
                   smoothFactor = 0,
                   fillColor = ~colour_pal_la_conc(wood_conc_pred),
@@ -524,11 +517,25 @@ server <- function(input, output, session) {
                   opacity = 0.7,
                   fillOpacity = 0.5,
                   popup = ~paste(lad22nm), 
-                  layerId = ~fid)
+                  layerId = ~fid,
+                  group = "conc") %>%
+      
+      # Add polygons and colour by concentration of EPCs with wood burning heat sources
+      addPolygons(data = data_epc_la_cross_section_to_map,
+                  smoothFactor = 0,
+                  fillColor = ~colour_pal_la_perc(wood_perc_h),
+                  weight = 0,
+                  opacity = 0.7,
+                  fillOpacity = 0.5,
+                  popup = ~paste(lad22nm),
+                  layerId = ~fid,
+                  group = "perc") %>%
+      
+      hideGroup(c("perc"))
     
   })
   
-  # Set up event to change data input based on click
+  # Set up event to change map fill based on user data selection
   observeEvent(input$selected_data_la, {
     
     if(input$selected_data_la == "Concentration"){
@@ -536,34 +543,18 @@ server <- function(input, output, session) {
       proxy_la %>%
         
         # Clear previous polygons
-        clearShapes() %>%
+        hideGroup(c("conc", "perc")) %>%
         
-        # Add polygons and colour by concentration of EPCs with wood burning heat sources
-        addPolygons(data = data_epc_la_cross_section_to_map,
-                    smoothFactor = 0,
-                    fillColor = ~colour_pal_la_conc(wood_conc_pred),
-                    weight = 0,
-                    opacity = 0.7,
-                    fillOpacity = 0.5,
-                    popup = ~paste(lad22nm), 
-                    layerId = ~fid)
+        showGroup("conc")
       
     } else {
       
       proxy_la %>%
         
         # Clear previous polygons
-        clearShapes() %>%
+        hideGroup(c("conc", "perc")) %>%
         
-        # Add polygons and colour by concentration of EPCs with wood burning heat sources
-        addPolygons(data = data_epc_la_cross_section_to_map,
-                    smoothFactor = 0,
-                    fillColor = ~colour_pal_la_perc(wood_perc_h),
-                    weight = 0,
-                    opacity = 0.7,
-                    fillOpacity = 0.5,
-                    popup = ~paste(lad22nm),
-                    layerId = ~fid)
+        showGroup("perc")
       
     }
     

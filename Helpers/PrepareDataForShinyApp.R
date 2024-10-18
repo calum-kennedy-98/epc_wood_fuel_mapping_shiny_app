@@ -33,11 +33,8 @@ upper_perc = 0.95
 
 # Load necessary data ----------------------------------------------------------
 
-# Map boundary data (LA level)
-la_boundaries <- read_sf(here("Data/la_boundaries.shp"))
-
 # LSOA data
-data_epc_lsoa_cross_section_to_map <- read_sf(here("Data/data_epc_lsoa_cross_section_to_map.shp")) %>% 
+data_epc_lsoa_cross_section_to_map <- read_sf(here("Data/raw/data_epc_lsoa_cross_section_to_map.shp")) %>% 
   
   # Rename outcome variables
   rename(lsoa21nm = lso21nm,
@@ -45,7 +42,7 @@ data_epc_lsoa_cross_section_to_map <- read_sf(here("Data/data_epc_lsoa_cross_sec
          wood_perc_h = wd_prc_)
 
 # Ward data
-data_epc_ward_cross_section_to_map <- read_sf(here("Data/data_epc_ward_cross_section_to_map.shp")) %>% 
+data_epc_ward_cross_section_to_map <- read_sf(here("Data/raw/data_epc_ward_cross_section_to_map.shp")) %>% 
   
   # Rename outcome variables
   rename(objectid = objectd,
@@ -56,7 +53,7 @@ data_epc_ward_cross_section_to_map <- read_sf(here("Data/data_epc_ward_cross_sec
   mutate(wd22nm_cd = paste(wd22nm, wd22cd, sep = " "))
 
 # LA data
-data_epc_la_cross_section_to_map <- read_sf(here("Data/data_epc_la_cross_section_to_map.shp")) %>% 
+data_epc_la_cross_section_to_map <- read_sf(here("Data/raw/data_epc_la_cross_section_to_map.shp")) %>% 
   
   # Rename outcome variables
   rename(wood_conc_pred = wd_cnc_,
@@ -108,3 +105,9 @@ data_epc_la_cross_section_to_map <- prepare_data_for_shiny_app(data = data_epc_l
                                                                lower_perc = lower_perc, 
                                                                upper_perc = upper_perc, 
                                                                perc_polygons_to_keep = 0.7)
+
+# Save data to folder for faster loading into Shiny app ------------------------
+
+st_write(data_epc_lsoa_cross_section_to_map, here("Data/cleaned/data_epc_lsoa_cross_section_to_map.shp"), append = FALSE)
+st_write(data_epc_ward_cross_section_to_map, here("Data/cleaned/data_epc_ward_cross_section_to_map.shp"), append = FALSE)
+st_write(data_epc_la_cross_section_to_map, here("Data/cleaned/data_epc_la_cross_section_to_map.shp"), append = FALSE)
