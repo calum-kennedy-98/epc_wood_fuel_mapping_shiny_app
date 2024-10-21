@@ -14,7 +14,8 @@ if(!require(pacman)){install.packages("pacman")}
 p_load(stringr,
        sf,
        dplyr,
-       rmapshaper)
+       rmapshaper,
+       here)
 
 # Source helper functions ------------------------------------------------------
 
