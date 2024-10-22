@@ -24,6 +24,9 @@ p_load(shiny,
 # Map boundary data (LA level)
 la_boundaries <- read_sf(here("Data/raw/la_boundaries.shp"))
 
+# Combine England and Wales shapefiles into one shapefile
+sca_boundaries <- read_sf(here("Data/cleaned/sca_boundaries.shp"))
+
 # LSOA data
 data_epc_lsoa_cross_section_to_map <- read_sf(here("Data/cleaned/data_epc_lsoa_cross_section_to_map.shp")) %>% 
   
@@ -98,6 +101,10 @@ ui <- page_fillable(
                                 "Prevalence")
                   ),
                   
+                  checkboxInput(inputId = "show_sca_boundaries_lsoa",
+                                label = "Show Smoke Control Areas",
+                                value = TRUE),
+                  
                   textOutput("lsoa_text")),
                 
                 # Display map
@@ -132,6 +139,10 @@ ui <- page_fillable(
                     choices = c("Concentration",
                                 "Prevalence")
                   ),
+                  
+                  checkboxInput(inputId = "show_sca_boundaries_ward",
+                                label = "Show Smoke Control Areas",
+                                value = TRUE),
                   
                   textOutput("ward_text")),
                 
@@ -168,6 +179,10 @@ ui <- page_fillable(
                                 "Prevalence")
                   ),
                   
+                  checkboxInput(inputId = "show_sca_boundaries_la",
+                                label = "Show Smoke Control Areas",
+                                value = TRUE),
+                  
                   textOutput("la_text")),
                 
                 # Display map
@@ -194,7 +209,7 @@ server <- function(input, output, session) {
                                        domain = data_epc_lsoa_cross_section_to_map$wood_perc_h,
                                        reverse = TRUE)
   
-  proxy_lsoa <- leafletProxy("lsoa_map")
+  proxy_lsoa <- leafletProxy("lsoa_map") 
   
   # Set initial value for selectize input
   updateSelectizeInput(session, 
@@ -227,11 +242,24 @@ server <- function(input, output, session) {
       
       addTiles() %>%
       
+      addMapPane("conc", zIndex = 440) %>%
+      
+      addMapPane("perc", zIndex = 430) %>%
+      
+      addMapPane("sca", zIndex = 420) %>%
+      
       # Add LA boundaries as polygons
       addPolygons(data = la_boundaries,
                   fillOpacity = 0,
                   color = "grey",
                   weight = 1) %>%
+      
+      addPolygons(data = sca_boundaries,
+                  fillOpacity = 0.25,
+                  color = "blue",
+                  weight = 1,
+                  group = "sca",
+                  options = pathOptions(pane = "sca")) %>%
       
       addPolygons(data = data_epc_lsoa_cross_section_to_map,
                   smoothFactor = 0,
@@ -241,7 +269,8 @@ server <- function(input, output, session) {
                   fillOpacity = 0.5,
                   popup = ~paste(lsoa21nm), 
                   layerId = ~fid,
-                  group = "conc") %>%
+                  group = "conc",
+                  options = pathOptions(pane = "conc")) %>%
       
       # Add polygons and colour by concentration of EPCs with wood burning heat sources
       addPolygons(data = data_epc_lsoa_cross_section_to_map,
@@ -252,9 +281,29 @@ server <- function(input, output, session) {
                   fillOpacity = 0.5,
                   popup = ~paste(lsoa21nm),
                   layerId = ~fid,
-                  group = "perc") %>%
+                  group = "perc",
+                  options = pathOptions(pane = "perc")) %>%
       
       hideGroup(c("perc"))
+    
+  })
+  
+  # Observer event to display SCA boundaries
+  observeEvent(input$show_sca_boundaries_lsoa, {
+    
+    if(input$show_sca_boundaries_lsoa == FALSE){
+      
+      proxy_lsoa %>%
+        
+        hideGroup("sca")
+      
+    } else {
+      
+      proxy_lsoa %>%
+        
+        showGroup("sca")
+      
+    }
     
   })
   
@@ -374,11 +423,24 @@ server <- function(input, output, session) {
       
       addTiles() %>%
       
+      addMapPane("conc", zIndex = 440) %>%
+      
+      addMapPane("perc", zIndex = 430) %>%
+      
+      addMapPane("sca", zIndex = 420) %>%
+      
       # Add LA boundaries as polygons
       addPolygons(data = la_boundaries,
                   fillOpacity = 0,
                   color = "grey",
                   weight = 1) %>%
+      
+      addPolygons(data = sca_boundaries,
+                  fillOpacity = 0.25,
+                  color = "blue",
+                  weight = 1,
+                  group = "sca",
+                  options = pathOptions(pane = "sca")) %>%
       
       addPolygons(data = data_epc_ward_cross_section_to_map,
                   smoothFactor = 0,
@@ -388,7 +450,8 @@ server <- function(input, output, session) {
                   fillOpacity = 0.5,
                   popup = ~paste(wd22nm_cd), 
                   layerId = ~objectid,
-                  group = "conc") %>%
+                  group = "conc",
+                  options = pathOptions(pane = "conc")) %>%
     
     # Add polygons and colour by concentration of EPCs with wood burning heat sources
     addPolygons(data = data_epc_ward_cross_section_to_map,
@@ -399,9 +462,29 @@ server <- function(input, output, session) {
                 fillOpacity = 0.5,
                 popup = ~paste(wd22nm_cd),
                 layerId = ~objectid,
-                group = "perc") %>%
+                group = "perc",
+                options = pathOptions(pane = "perc")) %>%
       
       hideGroup(c("perc"))
+    
+  })
+  
+  # Observer event to display SCA boundaries
+  observeEvent(input$show_sca_boundaries_ward, {
+    
+    if(input$show_sca_boundaries_ward == FALSE){
+      
+      proxy_ward %>%
+        
+        hideGroup("sca")
+      
+    } else {
+      
+      proxy_ward %>%
+        
+        showGroup("sca")
+      
+    }
     
   })
   
@@ -521,11 +604,24 @@ server <- function(input, output, session) {
       
       addTiles() %>%
       
+      addMapPane("conc", zIndex = 440) %>%
+      
+      addMapPane("perc", zIndex = 430) %>%
+      
+      addMapPane("sca", zIndex = 420) %>%
+      
       # Add LA boundaries as polygons
       addPolygons(data = la_boundaries,
                   fillOpacity = 0,
                   color = "grey",
                   weight = 1) %>%
+      
+      addPolygons(data = sca_boundaries,
+                  fillOpacity = 0.25,
+                  color = "blue",
+                  weight = 1,
+                  group = "sca",
+                  options = pathOptions(pane = "sca")) %>%
       
       addPolygons(data = data_epc_la_cross_section_to_map,
                   smoothFactor = 0,
@@ -535,7 +631,8 @@ server <- function(input, output, session) {
                   fillOpacity = 0.5,
                   popup = ~paste(lad22nm), 
                   layerId = ~fid,
-                  group = "conc") %>%
+                  group = "conc",
+                  options = pathOptions(pane = "conc")) %>%
       
       # Add polygons and colour by concentration of EPCs with wood burning heat sources
       addPolygons(data = data_epc_la_cross_section_to_map,
@@ -546,7 +643,8 @@ server <- function(input, output, session) {
                   fillOpacity = 0.5,
                   popup = ~paste(lad22nm),
                   layerId = ~fid,
-                  group = "perc") %>%
+                  group = "perc",
+                  options = pathOptions(pane = "perc")) %>%
       
       hideGroup(c("perc"))
     
@@ -572,6 +670,25 @@ server <- function(input, output, session) {
         hideGroup(c("conc", "perc")) %>%
         
         showGroup("perc")
+      
+    }
+    
+  })
+  
+  # Observer event to display SCA boundaries
+  observeEvent(input$show_sca_boundaries_la, {
+    
+    if(input$show_sca_boundaries_la == FALSE){
+      
+      proxy_la %>%
+        
+        hideGroup("sca")
+      
+    } else {
+      
+      proxy_la %>%
+        
+        showGroup("sca")
       
     }
     

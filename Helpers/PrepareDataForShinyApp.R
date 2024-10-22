@@ -54,6 +54,26 @@ data_epc_la_cross_section_to_map <- read_sf(here("Data/raw/data_epc_la_cross_sec
   rename(wood_conc_pred = wd_cnc_,
          wood_perc_h = wd_prc_)
 
+# Combine SCA shapefiles -------------------------------------------------------
+
+# SCA boundaries (England)
+sca_boundaries_england <- read_sf(here("Data/raw/Smoke_Control_Area_Boundaries_and_Exemptions.shp")) %>%
+  
+  st_transform(4326) %>%
+  
+  select(geometry)
+
+# SCA boundaries (Wales)
+sca_boundaries_wales <- read_sf(here("Data/raw/final_wales_sca.shp")) %>%
+  
+  st_transform(4326) %>%
+  
+  select(geometry)
+
+# Combine England and Wales shapefiles into one shapefile
+sca_boundaries <- rbind(sca_boundaries_england,
+                        sca_boundaries_wales)
+
 # Prepare data for Shiny app ---------------------------------------------------
 
 # LSOA data
@@ -106,3 +126,4 @@ data_epc_la_cross_section_to_map <- prepare_data_for_shiny_app(data = data_epc_l
 st_write(data_epc_lsoa_cross_section_to_map, here("Data/cleaned/data_epc_lsoa_cross_section_to_map.shp"), append = FALSE)
 st_write(data_epc_ward_cross_section_to_map, here("Data/cleaned/data_epc_ward_cross_section_to_map.shp"), append = FALSE)
 st_write(data_epc_la_cross_section_to_map, here("Data/cleaned/data_epc_la_cross_section_to_map.shp"), append = FALSE)
+st_write(sca_boundaries, here("Data/cleaned/sca_boundaries.shp"), append = FALSE)
