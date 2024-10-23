@@ -59,6 +59,8 @@ data_epc_la_cross_section_to_map <- read_sf(here("Data/raw/data_epc_la_cross_sec
 # SCA boundaries (England)
 sca_boundaries_england <- read_sf(here("Data/raw/Smoke_Control_Area_Boundaries_and_Exemptions.shp")) %>%
   
+  filter(type == "Smoke Control Area") %>%
+  
   st_transform(4326) %>%
   
   select(geometry)
